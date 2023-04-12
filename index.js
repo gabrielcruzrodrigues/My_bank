@@ -1,7 +1,8 @@
-//importando modulos
+//importando modulos 
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const fs = require('fs');
+const utilitarios = require('./utilitarios');
 const { EventEmitter } = require('events');
 
 EventEmitter.defaultMaxListeners = 16;
@@ -45,8 +46,7 @@ function menu() {
                 process.exit();
             }
         });
-    
-};
+}
 
 //criando nova conta
 function criarConta() {
@@ -82,7 +82,7 @@ function abrirConta() {
 
         //verifica se o nome do usuario é uma string e nao é um numero
         if (typeof nomeConta !== 'string' || !/^[a-zA-Z]+$/.test(nomeConta)) {
-            console.log(chalk.bgRed.black('A sua conta deve ter apenas Letras!'));
+            console.log(chalk.bgRed.black('O nome da sua conta deve ter apenas Letras!'));
             return abrirConta();
         }
 
@@ -130,7 +130,7 @@ function abrirConta() {
                 //filtro para a senha ter mais de cinco digitos
                 if (senha.length < 5) {
                     console.log(chalk.bgRed.black('A sua senha deve conter mais de cinco carateres'));
-                    return opcoesSenhaErro();
+                    return utilitarios.opcoesSenhaErro();
                 }
                 
                 //Filtrando a senha
@@ -138,7 +138,7 @@ function abrirConta() {
                     console.log(chalk.bgRed.black('Sua senha deve conter apenas numeros!'));
 
                     //opções caso a senha não seja apenas numerica
-                    opcoesSenhaErro();
+                    utilitarios.opcoesSenhaErro();
 
                 } else {
 
@@ -167,7 +167,7 @@ function consultarSaldo() {
     .then((answer) => {
         const nomeConta = answer['nomeConta'];
 
-        if (!checarConta(nomeConta)) {
+        if (!utilitarios.checarConta(nomeConta)) {
             console.log('================================================');
             inquirer.prompt([
                 {
@@ -203,9 +203,9 @@ function consultarSaldo() {
             ])
             .then((answer) => {
                 const senha = Number(answer['senha']);
-                const contaDados = buscarContaJson(nomeConta);
+                const contaDados = utilitarios.buscarContaJson(nomeConta);
 
-                if(!verificarSenha(nomeConta, senha)) {
+                if(!utilitarios.verificarSenha(nomeConta, senha)) {
                     console.log(chalk.bgRed.black('Senha incorreta, tente novamente!'));
                     consultarSaldo();
                 } else {
@@ -214,11 +214,9 @@ function consultarSaldo() {
                     menu();
                 }
             })
-            
         };
     });
 };
-
 
 function deposito() {
     console.log('================================================');
@@ -231,7 +229,7 @@ function deposito() {
     .then((answer) => {
         const nomeConta = answer['nodeConta'];
 
-        if (!checarConta(nomeConta)) {
+        if (!utilitarios.checarConta(nomeConta)) {
             console.log('================================================');
             inquirer.prompt([
                 {
@@ -267,9 +265,9 @@ function deposito() {
             ])
             .then((answer) => {
                 const senha = Number(answer['senha']);
-                const contaDados = buscarContaJson(nomeConta);
+                const contaDados = utilitarios.buscarContaJson(nomeConta);
 
-                if(!verificarSenha(nomeConta, senha)) {
+                if(!utilitarios.verificarSenha(nomeConta, senha)) {
                     console.log(chalk.bgRed.black('Senha incorreta, tente novamente!'));
                     consultarSaldo();
                 } else {
@@ -283,12 +281,11 @@ function deposito() {
                         .then((answer) => {
                             const valor = answer['valor'];
 
-                            adicionarValor(nomeConta, valor);
+                            utilitarios.adicionarValor(nomeConta, valor);
                             menu();
                         })
                 }
             });
-            
         };
     });
 }  
@@ -304,7 +301,7 @@ function sacar() {
     .then((answer) => {
         const nomeConta = answer['nomeConta'];
 
-        if (!checarConta(nomeConta)) {
+        if (!utilitarios.checarConta(nomeConta)) {
             console.log('================================================');
 
             inquirer.prompt([
@@ -340,9 +337,9 @@ function sacar() {
             ])
             .then((answer) => {
                 const senha = Number(answer['senha']);
-                const contaDados = buscarContaJson(nomeConta);
+                const contaDados = utilitarios.buscarContaJson(nomeConta);
 
-                if (!verificarSenha(nomeConta, senha)) {
+                if (!utilitarios.verificarSenha(nomeConta, senha)) {
                     console.log(chalk.bgRed.black('Senha incorreta, tente novamente!'));
                     sacar();
                 } else {
@@ -356,7 +353,7 @@ function sacar() {
                     .then((answer) => {
                         const valor = answer['valor'];
 
-                        removerValor(nomeConta, valor);
+                        utilitarios.removerValor(nomeConta, valor);
                         menu();
                     })
                 }
@@ -378,7 +375,7 @@ function deletarConta() {
         const nomeConta = answer['nomeConta'];
 
         //conferindo se a conta existe
-        if(!checarConta(nomeConta)) {
+        if(!utilitarios.checarConta(nomeConta)) {
             console.log('================================================');
             inquirer.prompt([
                 {
@@ -405,7 +402,6 @@ function deletarConta() {
                 };
             });
         } else {
-            console.log('================================================');
             inquirer.prompt([
                 {
                     name: 'senha',
@@ -414,13 +410,13 @@ function deletarConta() {
             ])
             .then((answer) => {
                 const senha = Number(answer['senha']);
-                const contaDados = buscarContaJson(nomeConta);
+                const contaDados = utilitarios.buscarContaJson(nomeConta);
 
-                if (!verificarSenha(nomeConta, senha)) {
+                if (!utilitarios.verificarSenha(nomeConta, senha)) {
                     console.log(chalk.bgRed.black('Senha incorreta, tente novamente!'));
                     deletarConta();
                 } else {
-                    console.log(chalk.bgBlue.black(`A conta ${nomeConta} foi selecionada!`));
+                    console.log(chalk.bgBlue.black(`A conta {${nomeConta}} foi selecionada!`));
 
                     inquirer.prompt([
                         {
@@ -457,98 +453,9 @@ function deletarConta() {
     });
 };
 
-/* Funções reutilizaveis */
-function checarConta(nomeConta) {
-    if (!fs.existsSync(`contas/${nomeConta}.json`)) {
-        console.log(chalk.bgRed.black('Esta conta não existe, Crie uma conta para continuar!'));
-        return false;
-    }
-    return true;
-}
-
-function buscarContaJson(nomeConta) {
-    const contaJson = fs.readFileSync(`contas/${nomeConta}.json`, {
-        encoding: 'utf-8',
-        flag: 'r',
-    })
-    return JSON.parse(contaJson);
-}
-
-function adicionarValor(nomeConta, valor) {
-    const contaDados = buscarContaJson(nomeConta);
-
-    if(!valor) {
-        console.log(chalk.bgRed.black('Ocorreu um erro, tente novamente mais tarde!'));
-        return deposito()
-    };
-
-    contaDados.balance = parseFloat(valor) + parseFloat(contaDados.balance);
-
-    fs.writeFileSync(`contas/${nomeConta}.json`, JSON.stringify(contaDados), function (err) {
-        console.log(err);
-    });
-
-    console.log(chalk.green(`Foi depositado o valor de R$${valor} na sua conta!`));
+module.exports = {
+    menu, 
+    abrirConta,
+    deposito,
+    sacar,
 };
-
-function removerValor(nomeConta, valor) {
-    const contaDados = buscarContaJson(nomeConta);
-
-    if (!valor) {
-        console.log(chalk.bgRed.black('Não foi definido um valor para ser retirado!'));
-        return sacar();
-    };
-
-    if (contaDados.balance < valor) {
-        console.log(chalk.bgRed.black('Valor indisponível!'));
-        return sacar();
-    };
-
-    contaDados.balance = parseFloat(contaDados.balance) - parseFloat(valor);
-
-    fs.writeFileSync(`contas/${nomeConta}.json`, JSON.stringify(contaDados), function (err) {
-        console.log(err);
-    });
-
-    console.log(chalk.green(`Foi realizado um saque de R$${valor} da sua conta!`));
-};
-
-function opcoesSenhaErro() {
-    console.log('================================================');
-    inquirer.prompt([
-        {
-            type: 'list',
-            name: 'erroSenha',
-            message: 'O que você deseja fazer?',
-            choices: [
-                'Tentar novamente',
-                'Voltar ao menu principal',
-                'Sair',
-            ],
-        },
-    ])
-    .then((answer) => {
-        const erroSenha = answer['erroSenha'];
-
-        if (erroSenha === 'Tentar novamente') {
-            return abrirConta();
-        } else if (erroSenha === 'Voltar ao menu principal') {
-            menu();
-        } else if (erroSenha === 'Sair') {
-            console.log(chalk.bgBlue.black('Obrigado por usar o Accounts!'));
-            process.exit();
-        }
-    });
-};
-
-function verificarSenha(nomeConta, senha) {
-    
-    const contaDados = buscarContaJson(nomeConta);    
-
-    if(contaDados.senha !== senha) {
-        return false;
-    } else {
-        return true;
-    };
-};
-
